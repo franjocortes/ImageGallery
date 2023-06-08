@@ -1,2 +1,2 @@
-# image_gallery
+# ImageGallery
 Image Gallery | Django + AWS S3
