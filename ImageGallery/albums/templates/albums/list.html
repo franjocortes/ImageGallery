@@ -6,4 +6,50 @@
             <h1>Gallery</h1>
         </div>
     </div>
+
+    <button
+        type="button"
+        class="btn btn-outline-primary"
+        data-bs-toggle="modal"
+        data-bs-target="#album-modal"
+    >
+        New Album
+    </button>
+
+    <div
+    class="modal fade"
+    id="album-modal"
+    tabindex="-1"
+    aria-labelledby="album-modal-Label"
+    aria-hidden="true"
+    >
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h1 class="modal-title fs-5" id="album-modal-Label">New Album</h1>
+                    <button
+                    type="button"
+                    class="btn-close"
+                    data-bs-dismiss="modal"
+                    aria-label="Close"
+                    ></button>
+                </div>
+                <form action="" method="POST">
+                    <div class="modal-body">
+                        {% for field in form %}
+                            <div class="form-group mb-3">{{ field }}</div>
+                        {% endfor %}
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+                        Close
+                        </button>
+                        <input type="submit" class="btn btn-outline-primary" value="Create" />
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+
 {% endblock %}
