@@ -1,2 +1,4 @@
 # python|Django
 env/
+*.pyc
+db.sqlite3
