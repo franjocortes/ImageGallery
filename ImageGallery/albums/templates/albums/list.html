@@ -2,57 +2,26 @@
 
 {% block content %}
 
+    {% include 'albums/snippets/modal.html' %}
 
-    <button
-        type="button"
-        class="btn btn-outline-primary"
-        data-bs-toggle="modal"
-        data-bs-target="#album-modal"
-    >
-        New Album
-    </button>
+    <div class="row mt-4 mb-4">
 
-    <div
-    class="modal fade"
-    id="album-modal"
-    tabindex="-1"
-    aria-labelledby="album-modal-Label"
-    aria-hidden="true"
-    >
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h1 class="modal-title fs-5" id="album-modal-Label">New Album</h1>
-                    <button
-                    type="button"
-                    class="btn-close"
-                    data-bs-dismiss="modal"
-                    aria-label="Close"
-                    ></button>
-                </div>
-                <form action="{% url 'albums:create' %}" method="POST">
-                    {% csrf_token %}
-                    <div class="modal-body">
-                        {% for field in form %}
-                            <div class="form-group mb-3">{{ field }}</div>
-                        {% endfor %}
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
-                        Close
-                        </button>
-                        <input type="submit" class="btn btn-outline-primary" value="Create" />
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
-
-    <div class="row">
-        <div class="col">
+        <div class="col-6">
             <h1>Gallery</h1>
         </div>
+
+        <div class="col-6 text-end">
+            <button
+                type="button"
+                class="btn btn-outline-primary"
+                data-bs-toggle="modal"
+                data-bs-target="#album-modal">
+                New Album
+            </button>
+        </div>
+
     </div>
+
 
     <div class="row">
         <div class="col">
@@ -68,7 +37,9 @@
                 <tbody>
                     {% for album in albums %}
                         <tr>
-                            <th>{{ album.title }}</th>
+                            <th>
+                                <i class="fas fa-folder"></i> {{ album.title }}
+                            </th>
                             <td>{{ album.created_at }}</td>
                             <td>0</td>
                             <td>0 Mb</td>
