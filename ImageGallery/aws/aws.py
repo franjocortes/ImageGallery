@@ -22,7 +22,7 @@ def create_folder(directory_name: str) -> str:
             s3 = boto3.client('s3', 
                             aws_access_key_id=AWS_S3_ACCESS_ID,
                             aws_secret_access_key=AWS_S3_ACCESS_KEY)
-            key = directory_name.lower().replace(' ', '') + '/'
+            key = directory_name.lower().replace(' ', '_') + '/'
             s3.put_object(Bucket=AWS_S3_BUCKET_NAME, Key=key)
             return key
         except Exception as error:
