@@ -24,7 +24,11 @@ def create(request):
     form = AlbumForm(request.POST or None)
 
     if request.method == 'POST' and form.is_valid():
-        album = form.save()
+
+        album = Album.objects.create_by_aws(
+            title=form.cleaned_data['title'],
+            description=form.cleaned_data['description'])
+
         return redirect('albums:index')
     
 
