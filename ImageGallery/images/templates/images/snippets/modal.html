@@ -16,7 +16,7 @@ aria-hidden="true"
                 aria-label="Close"
                 ></button>
             </div>
-            <form action="{% url 'albums:create' %}" method="POST">
+            <form action="{% url 'images:create' %}" method="POST" enctype="multipart/form-data">
                 {% csrf_token %}
                 <div class="modal-body">
                     {% for field in form %}
