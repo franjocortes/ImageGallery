@@ -5,6 +5,8 @@ from django.views.generic import ListView, DetailView
 from albums.forms import AlbumForm
 from albums.models import Album
 
+from images.forms import UploadFileForm
+
 
 class AlbumListView(ListView):
     model = Album
@@ -35,3 +37,11 @@ def create(request):
 class AlbumDetailView(DetailView):
     model = Album
     template_name = 'albums/detail.html'
+
+    def get_context_data(self, *args, **kwargs):
+        context = super().get_context_data(*args, **kwargs)
+
+        context['title'] = self.get_object().title
+        context['form'] = UploadFileForm()
+
+        return context
