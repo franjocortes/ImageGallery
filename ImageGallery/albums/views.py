@@ -42,6 +42,8 @@ class AlbumDetailView(DetailView):
         context = super().get_context_data(*args, **kwargs)
 
         context['title'] = self.get_object().title
-        context['form'] = UploadFileForm()
+        context['form'] = UploadFileForm({
+            'album_id': self.get_object().pk
+        })
 
         return context

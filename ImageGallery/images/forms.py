@@ -1,7 +1,11 @@
-from django.forms import Form, FileField, FileInput
+from django.forms import (
+    Form, FileField, FileInput, CharField,
+    HiddenInput
+)
 
 
 class UploadFileForm(Form):
+    album_id = CharField(required=True, widget=HiddenInput())
     file = FileField(
         required=True,
         label='Imagen',
