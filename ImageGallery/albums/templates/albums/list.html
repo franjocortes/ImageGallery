@@ -42,9 +42,9 @@
                                     <i class="fas fa-folder"></i> {{ album.title }}
                                 </a>
                             </th>
-                            <td>{{ album.created_at }}</td>
-                            <td>0</td>
-                            <td>0 Mb</td>
+                            <td>{{ album.created_at | date:'d M Y' }}</td>
+                            <td>{{ album.images.count }}</td>
+                            <td>{{ album.size }} bytes</td>
                         </tr>
                     {% endfor %}
                 </tbody>

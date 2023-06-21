@@ -1,5 +1,13 @@
 {% extends 'base/base.html' %}
 
+{% block style %}
+    <style>
+        .row-image {
+            cursor: pointer;
+        }
+    </style>
+{% endblock %}
+
 {% block content %}
 
     {% include 'images/snippets/modal.html' %}
@@ -12,9 +20,11 @@
 
     <div class="row">
         <div class="col">
-            <h2>{{ title }}</h2>
+            <h2><a href="{% url 'albums:index' %}">Gallery</a> | {{ title }}</h2>
         </div>
     </div>
+
+    <hr>
 
     <div class="row mt-4">
         <div class="col">
@@ -28,4 +38,123 @@
         </div>
     </div>
 
+    <div class="row mt-4">
+        <div class="col-8">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Create date</th>
+                        <th>Size</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for image in images %}
+                        <tr class="row-image" image-id="{{ image.pk }}">
+                            <td>
+                                <input type="hidden" value="{{ image.url }}" id="image_preview_{{ image.pk }}">
+                                <div id="image_name_{{ image.pk }}">
+                                    {{ image.title }}
+                                </div>
+                                <form action="{% url 'images:update' image.pk %}" method="post" class="image-form" image-id="{{ image.pk }}">
+                                    {% csrf_token %}
+                                    <input type="hidden" value="{{ image.title }}" class="form-control" id="image_input_name_{{ image.pk }}" name="name">
+                                </form>
+                            </td>
+                            <td>{{ image.created_at }}</td>
+                            <td>{{ image.size }}</td>
+                            <td>
+                                <div class="dropdown">
+                                    <button type="button" class="btn btn-outline-secondary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                                        ...
+                                    </button>
+                                    <div class="dropdown-menu">
+                                        <a href="{{ image.url }}" target="_blank" class="dropdown-item">Preview</a>
+                                        <a href="" class="dropdown-item image-edit" image-id="{{ image.pk }}">Edit name</a>
+                                        <a href="" class="dropdown-item">Download</a>
+                                        <div class="dropdown-divider"></div>
+                                        <a href="" class="dropdown-item">Delete</a>
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        <div class="col-4">
+            <img src="" alt="" width="300" id="image_preview">
+        </div>
+    </div>
+
+{% endblock %}
+
+{% block javascript %}
+    <script>
+        const imagepreview = document.getElementById("image_preview");
+        const imageDefaultUrl = "https://{{ aws.bucket_name }}.s3.amazonaws.com/{{ aws.root_key }}default.png";
+
+        function selectRow(row) {
+            let imageId = row.getAttribute('image-id');
+            let input = document.getElementById('image_preview_' + imageId);
+            imagepreview.src = input.value;
+
+            document.querySelectorAll('table-active').forEach(element => {
+                element.classList.remove('table-active');
+            });
+            row.classList.add('table-active');
+        }
+
+        function setDefaultImage() {
+            let rows = document.getElementsByTagName('tr');
+            if (rows.length >= 2) {
+                selectRow(rows[1]);
+            } else {
+                imagepreview.src = imageDefaultUrl;
+            }
+        }
+
+        document.querySelectorAll('.row-image').forEach(element => {
+            element.addEventListener('click', function(event) {
+                selectRow(this);
+            });
+        });
+
+        document.querySelectorAll('.image-edit').forEach(element => {
+            element.addEventListener('click', function(event) {
+                event.preventDefault();
+                const imageId = this.getAttribute('image-id');
+                const input = document.getElementById('image_input_name_' + imageId);
+                const div = document.getElementById('image_name_' + imageId);
+                input.setAttribute('type', 'text');
+                div.style.display = 'none';
+            });
+        });
+
+        document.querySelectorAll('.image-form').forEach(element => {
+            element.addEventListener('submit', function(event) {
+                event.preventDefault();
+
+                fetch(this.action, {
+                    body: new FormData(this),
+                    method: 'POST'
+                })
+                .then(response => response.json())
+                .then(data => {
+                    const imageId = this.getAttribute('image-id');
+                    const input = document.getElementById('image_input_name_' + imageId);
+                    const div = document.getElementById('image_name_' + imageId);
+                    const inputPreview = document.getElementById('image_preview_' + imageId);
+                    input.value = data.name;
+                    input.setAttribute('type', 'hidden');
+                    div.innerHTML = data.name;
+                    div.style.display = 'block';
+                    inputPreview.value = data.url;
+                })
+            })
+        })
+
+        setDefaultImage();
+    </script>
 {% endblock %}
