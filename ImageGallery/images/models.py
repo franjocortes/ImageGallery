@@ -1,6 +1,8 @@
 from django.db import models
 from django.conf import settings
 
+from aws import rename_file
+
 from albums.models import Album
 
 
@@ -33,7 +35,7 @@ class Image(models.Model):
         new_name += '.' + self.extension
         new_key = self.album.key + new_name
 
-        if new_key:
+        if rename_file(self.key, new_key):
             self.key = new_key
             self.name = new_name
             self.save()

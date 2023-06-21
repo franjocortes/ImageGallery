@@ -64,6 +64,7 @@ def upload_image(mediafile_key, file):
 
 
 def rename_file(old_mediafile_key, new_mediafile_key):
+    
     if AWS_S3_ACCESS_ID and AWS_S3_ACCESS_KEY and AWS_S3_BUCKET_NAME:
     
         try:
@@ -73,14 +74,15 @@ def rename_file(old_mediafile_key, new_mediafile_key):
                 aws_secret_access_key=AWS_S3_ACCESS_KEY
             )
 
-            bucket = s3.Bucket(AWS_S3_BUCKET_NAME)
+            old_key = AWS_ROOT_KEY + old_mediafile_key
+            new_key = AWS_ROOT_KEY + new_mediafile_key
 
-            return bucket.put_object(
-                ACL='public-read',
-                Key=AWS_ROOT_KEY + mediafile_key,
-                ContentType=file.content_type,
-                Body=file
-            )
+            s3.Object(AWS_S3_BUCKET_NAME, new_key).copy_from(CopySource=AWS_S3_BUCKET_NAME + '/' + old_key)
+            s3.Object(AWS_S3_BUCKET_NAME, old_key).delete()
+
+            s3.Object(AWS_S3_BUCKET_NAME, new_key).Acl().put(ACL='public-read')
+
+            return True
         
         except Exception as error:
             print(error)
