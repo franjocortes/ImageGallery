@@ -39,6 +39,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     
     'albums',
+    'images',
 ]
 
 MIDDLEWARE = [
@@ -129,3 +130,5 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 AWS_S3_ACCESS_ID = os.environ.get('AWS_S3_ACCESS_ID', None)
 AWS_S3_ACCESS_KEY = os.environ.get('AWS_S3_ACCESS_KEY', None)
 AWS_S3_BUCKET_NAME = os.environ.get('AWS_S3_BUCKET_NAME', None)
+
+AWS_ROOT_FOLDER = 'image_gallery/'

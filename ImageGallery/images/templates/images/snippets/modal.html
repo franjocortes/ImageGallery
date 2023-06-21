@@ -1,0 +1,35 @@
+<div
+class="modal fade"
+id="image-modal"
+tabindex="-1"
+aria-labelledby="image-modal-Label"
+aria-hidden="true"
+>
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h1 class="modal-title fs-5" id="image-modal-Label">New Image</h1>
+                <button
+                type="button"
+                class="btn-close"
+                data-bs-dismiss="modal"
+                aria-label="Close"
+                ></button>
+            </div>
+            <form action="{% url 'images:create' %}" method="POST" enctype="multipart/form-data">
+                {% csrf_token %}
+                <div class="modal-body">
+                    {% for field in form %}
+                        <div class="form-group mb-3">{{ field }}</div>
+                    {% endfor %}
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+                    Close
+                    </button>
+                    <input type="submit" class="btn btn-outline-primary" value="Upload" />
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

@@ -1,9 +1,12 @@
 from typing import Any, Dict
 from django.shortcuts import render, redirect
 from django.views.generic import ListView, DetailView
+from django.conf import settings
 
 from albums.forms import AlbumForm
 from albums.models import Album
+
+from images.forms import UploadFileForm
 
 
 class AlbumListView(ListView):
@@ -35,3 +38,18 @@ def create(request):
 class AlbumDetailView(DetailView):
     model = Album
     template_name = 'albums/detail.html'
+
+    def get_context_data(self, *args, **kwargs):
+        context = super().get_context_data(*args, **kwargs)
+
+        context['title'] = self.get_object().title
+        context['form'] = UploadFileForm({
+            'album_id': self.get_object().pk
+        })
+        context['images'] = self.get_object().images
+        context['aws'] = {
+            'bucket_name': getattr(settings, 'AWS_S3_BUCKET_NAME', None),
+            'root_key': getattr(settings, 'AWS_ROOT_FOLDER', '')
+        }
+
+        return context
