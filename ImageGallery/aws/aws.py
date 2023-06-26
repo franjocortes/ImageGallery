@@ -9,6 +9,15 @@ AWS_S3_BUCKET_NAME = getattr(settings, 'AWS_S3_BUCKET_NAME', None)
 AWS_ROOT_KEY = getattr(settings, 'AWS_ROOT_FOLDER', '')
 
 
+def get_boto_resourse():
+    resource = boto3.resource(
+                's3',
+                aws_access_key_id=AWS_S3_ACCESS_ID,
+                aws_secret_access_key=AWS_S3_ACCESS_KEY
+            )
+    return resource
+
+
 def create_folder(directory_name: str) -> str:
     """Create folder in AWS bucket S3
 
@@ -36,17 +45,12 @@ def create_folder(directory_name: str) -> str:
         print('NO CREDENTIALS PROVIDED, you must to add credentials in .env file')
 
 
-def upload_image(mediafile_key, file):
+def upload_image(mediafile_key: str, file: str) -> any:
     
     if AWS_S3_ACCESS_ID and AWS_S3_ACCESS_KEY and AWS_S3_BUCKET_NAME:
     
         try:
-            s3 = boto3.resource(
-                's3',
-                aws_access_key_id=AWS_S3_ACCESS_ID,
-                aws_secret_access_key=AWS_S3_ACCESS_KEY
-            )
-
+            s3 = get_boto_resourse()
             bucket = s3.Bucket(AWS_S3_BUCKET_NAME)
 
             return bucket.put_object(
@@ -63,16 +67,12 @@ def upload_image(mediafile_key, file):
         print('NO CREDENTIALS PROVIDED, you must to add credentials in .env file')
 
 
-def rename_file(old_mediafile_key, new_mediafile_key):
+def rename_file(old_mediafile_key: str, new_mediafile_key: str) -> bool:
     
     if AWS_S3_ACCESS_ID and AWS_S3_ACCESS_KEY and AWS_S3_BUCKET_NAME:
     
         try:
-            s3 = boto3.resource(
-                's3',
-                aws_access_key_id=AWS_S3_ACCESS_ID,
-                aws_secret_access_key=AWS_S3_ACCESS_KEY
-            )
+            s3 = get_boto_resourse()
 
             old_key = AWS_ROOT_KEY + old_mediafile_key
             new_key = AWS_ROOT_KEY + new_mediafile_key
@@ -89,3 +89,22 @@ def rename_file(old_mediafile_key, new_mediafile_key):
         
     else:
         print('NO CREDENTIALS PROVIDED, you must to add credentials in .env file')
+    return False
+
+
+def delete_file(mediafile_key: str) -> bool:
+    if AWS_S3_ACCESS_ID and AWS_S3_ACCESS_KEY and AWS_S3_BUCKET_NAME:
+    
+        try:
+            s3 = get_boto_resourse()
+            file_key = AWS_ROOT_KEY + mediafile_key
+            s3.Object(AWS_S3_BUCKET_NAME, file_key).delete()
+
+            return True
+        
+        except Exception as error:
+            print(error)
+        
+    else:
+        print('NO CREDENTIALS PROVIDED, you must to add credentials in .env file')
+    return False
