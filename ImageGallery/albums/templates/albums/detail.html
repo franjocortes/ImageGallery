@@ -11,6 +11,7 @@
 {% block content %}
 
     {% include 'images/snippets/modal.html' %}
+    {% include 'images/snippets/modal_delete.html' %}
 
     <div class="row mt-4 mb-4">
         <div class="col-6">
@@ -74,7 +75,7 @@
                                         <a href="" class="dropdown-item image-edit" image-id="{{ image.pk }}">Edit name</a>
                                         <a href="" class="dropdown-item">Download</a>
                                         <div class="dropdown-divider"></div>
-                                        <a href="" class="dropdown-item">Delete</a>
+                                        <a href="{% url 'images:show' image.pk %}" class="dropdown-item" data-bs-toggle="modal" data-bs-target="#image_delete_modal">Delete</a>
                                     </div>
                                 </div>
                             </td>
@@ -153,7 +154,19 @@
                     inputPreview.value = data.url;
                 })
             })
-        })
+        });
+
+        const myModalEl = document.getElementById('image_delete_modal');
+        myModalEl.addEventListener('show.bs.modal', event => {
+            let item = event.relatedTarget;
+
+            fetch(item.href)
+            .then(response => response.json())
+            .then(function(data) {
+                myModalEl.querySelector('#strong_name').textContent = data.name;
+                myModalEl.querySelector('#btn_delete').href = data.delete_url;
+            });
+        });
 
         setDefaultImage();
     </script>

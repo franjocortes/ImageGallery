@@ -1,12 +1,22 @@
 from django.shortcuts import redirect, get_object_or_404
 from django.http import JsonResponse
+from django.urls import reverse
 
-from aws import upload_image
+from aws import upload_image, delete_file
 
 from albums.models import Album
 
 from images.forms import UploadFileForm
 from images.models import Image
+
+
+def show(request, pk):
+    image = get_object_or_404(Image, pk=pk)
+    return JsonResponse({
+        'id': image.pk,
+        'name': image.name,
+        'delete_url': reverse('images:delete', kwargs={'pk': image.pk})
+    })
 
 
 def update(request, pk):
@@ -56,3 +66,13 @@ def create(request):
 
     else:
         print('METHOD NOT VALID')
+
+
+def delete(request, pk):
+    image = get_object_or_404(Image, pk=pk)
+    album = image.album
+
+    if delete_file(image.key):
+        image.delete()
+
+    return redirect('albums:detail', album.id)
