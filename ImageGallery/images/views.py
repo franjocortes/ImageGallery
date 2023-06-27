@@ -1,8 +1,8 @@
 from django.shortcuts import redirect, get_object_or_404
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponse
 from django.urls import reverse
 
-from aws import upload_image, delete_file
+from aws import upload_image, delete_file, get_file_content
 
 from albums.models import Album
 
@@ -76,3 +76,15 @@ def delete(request, pk):
         image.delete()
 
     return redirect('albums:detail', album.id)
+
+
+def download(request, pk):
+    image = get_object_or_404(Image, pk=pk)
+    content = get_file_content(image.key)
+    if content:
+        response = HttpResponse(content, content_type=image.content_type)
+        response['Content-Disposition'] = f'attachment; filename={image.name}'
+        return response
+    print('ERROR: an error with aws s3')
+    return redirect('albums:detail', image.album.id)
+
