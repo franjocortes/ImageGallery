@@ -73,7 +73,7 @@
                                     <div class="dropdown-menu">
                                         <a href="{{ image.url }}" target="_blank" class="dropdown-item">Preview</a>
                                         <a href="" class="dropdown-item image-edit" image-id="{{ image.pk }}">Edit name</a>
-                                        <a href="" class="dropdown-item">Download</a>
+                                        <a href="{% url 'images:download' image.pk %}" class="dropdown-item">Download</a>
                                         <div class="dropdown-divider"></div>
                                         <a href="{% url 'images:show' image.pk %}" class="dropdown-item" data-bs-toggle="modal" data-bs-target="#image_delete_modal">Delete</a>
                                     </div>
