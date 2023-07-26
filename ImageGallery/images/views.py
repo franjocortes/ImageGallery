@@ -1,6 +1,9 @@
+import json
+
 from django.shortcuts import redirect, get_object_or_404
 from django.http import JsonResponse, HttpResponse
 from django.urls import reverse
+from django.views.decorators.csrf import csrf_exempt
 
 from aws import upload_image, delete_file, get_file_content
 
@@ -72,10 +75,20 @@ def delete(request, pk):
     image = get_object_or_404(Image, pk=pk)
     album = image.album
 
-    if delete_file(image.key):
-        image.delete()
+    image.objects.delete_by_aws(image.pk)
 
     return redirect('albums:detail', album.id)
+
+
+@csrf_exempt
+def delete_many(request):
+    if request.method == 'POST':
+        payload = json.loads(request.body)
+        ids = payload.get('ids', [])
+
+        return JsonResponse({
+            'ids': [ Image.objects.delete_by_aws(id) for id in ids ]
+        })
 
 
 def download(request, pk):
