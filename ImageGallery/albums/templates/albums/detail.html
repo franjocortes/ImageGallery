@@ -1,0 +1,268 @@
+{% extends 'base/base.html' %}
+
+{% block style %}
+    <style>
+        .row-image {
+            cursor: pointer;
+        }
+    </style>
+{% endblock %}
+
+{% block content %}
+
+    {% include 'images/snippets/modal.html' %}
+    {% include 'images/snippets/modal_delete.html' %}
+
+    <div class="row mt-4 mb-4">
+        <div class="col-6">
+            <h1>Album Detail</h1>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col">
+            <h2><a href="{% url 'albums:index' %}">Gallery</a> | {{ title }}</h2>
+        </div>
+    </div>
+
+    <hr>
+
+    <div class="row mt-4">
+        <div class="col">
+            <button
+                type="button"
+                class="btn btn-outline-primary"
+                data-bs-toggle="modal"
+                data-bs-target="#image-modal">
+                New Image
+            </button>
+            <a
+                href="{% url 'images:download_many' %}"
+                id="btnDownload"
+                class="btn btn-outline-info disabled">
+                Download
+            </a>
+            <a
+                href="{% url 'images:delete_many' %}"
+                id="btnDelete"
+                class="btn btn-outline-danger disabled">
+                Delete
+            </a>
+        </div>
+    </div>
+
+    <div class="row mt-4">
+        <div class="col-8">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>
+                            <div class="form-check">
+                                <input type="checkbox" class="form-check-input" id="chk_all_images">
+                            </div>
+                        </th>
+                        <th>Name</th>
+                        <th>Create date</th>
+                        <th>Size</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for image in images %}
+                        <tr class="row-image" image-id="{{ image.pk }}" id="tr_image_{{ image.pk }}">
+                            <td>
+                                <div class="form-check">
+                                    <input type="checkbox" class="form-check-input chk-image" image-id="{{ image.pk }}">
+                                </div>
+                            </td>
+                            <td>
+                                <input type="hidden" value="{{ image.url }}" id="image_preview_{{ image.pk }}">
+                                <div id="image_name_{{ image.pk }}">
+                                    {{ image.title }}
+                                </div>
+                                <form action="{% url 'images:update' image.pk %}" method="post" class="image-form" image-id="{{ image.pk }}">
+                                    {% csrf_token %}
+                                    <input type="hidden" value="{{ image.title }}" class="form-control" id="image_input_name_{{ image.pk }}" name="name">
+                                </form>
+                            </td>
+                            <td>{{ image.created_at }}</td>
+                            <td>{{ image.size }}</td>
+                            <td>
+                                <div class="dropdown">
+                                    <button type="button" class="btn btn-outline-secondary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                                        ...
+                                    </button>
+                                    <div class="dropdown-menu">
+                                        <a href="{{ image.url }}" target="_blank" class="dropdown-item">Preview</a>
+                                        <a href="" class="dropdown-item image-edit" image-id="{{ image.pk }}">Edit name</a>
+                                        <a href="{% url 'images:download' image.pk %}" class="dropdown-item">Download</a>
+                                        <div class="dropdown-divider"></div>
+                                        <a href="{% url 'images:show' image.pk %}" class="dropdown-item" data-bs-toggle="modal" data-bs-target="#image_delete_modal">Delete</a>
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        <div class="col-4">
+            <img src="" alt="" width="300" id="image_preview">
+        </div>
+    </div>
+
+{% endblock %}
+
+{% block javascript %}
+    <script>
+        const imagepreview = document.getElementById("image_preview");
+        const imageDefaultUrl = "https://{{ aws.bucket_name }}.s3.amazonaws.com/{{ aws.root_key }}default.png";
+        const chk_all_images = document.getElementById('chk_all_images');
+        const btnDownload = document.getElementById('btnDownload');
+        const btnDelete = document.getElementById('btnDelete');
+
+        function checkInputs(){
+            let images = document.querySelectorAll('input.chk-image[type="checkbox"]:checked');
+            if (images.length > 1){
+                btnDownload.classList.remove('disabled');
+                btnDelete.classList.remove('disabled');
+            } else {
+                btnDownload.classList.add('disabled');
+                btnDelete.classList.add('disabled');
+            }
+        }
+
+        function selectRow(row) {
+            let imageId = row.getAttribute('image-id');
+            let input = document.getElementById('image_preview_' + imageId);
+            imagepreview.src = input.value;
+
+            document.querySelectorAll('table-active').forEach(element => {
+                element.classList.remove('table-active');
+            });
+            row.classList.add('table-active');
+        }
+
+        function setDefaultImage() {
+            let rows = document.getElementsByTagName('tr');
+            if (rows.length >= 2) {
+                selectRow(rows[1]);
+            } else {
+                imagepreview.src = imageDefaultUrl;
+            }
+        }
+
+        document.querySelectorAll('.row-image').forEach(element => {
+            element.addEventListener('click', function(event) {
+                selectRow(this);
+            });
+        });
+
+        document.querySelectorAll('.image-edit').forEach(element => {
+            element.addEventListener('click', function(event) {
+                event.preventDefault();
+                const imageId = this.getAttribute('image-id');
+                const input = document.getElementById('image_input_name_' + imageId);
+                const div = document.getElementById('image_name_' + imageId);
+                input.setAttribute('type', 'text');
+                div.style.display = 'none';
+            });
+        });
+
+        document.querySelectorAll('.image-form').forEach(element => {
+            element.addEventListener('submit', function(event) {
+                event.preventDefault();
+
+                fetch(this.action, {
+                    body: new FormData(this),
+                    method: 'POST'
+                })
+                .then(response => response.json())
+                .then(data => {
+                    const imageId = this.getAttribute('image-id');
+                    const input = document.getElementById('image_input_name_' + imageId);
+                    const div = document.getElementById('image_name_' + imageId);
+                    const inputPreview = document.getElementById('image_preview_' + imageId);
+                    input.value = data.name;
+                    input.setAttribute('type', 'hidden');
+                    div.innerHTML = data.name;
+                    div.style.display = 'block';
+                    inputPreview.value = data.url;
+                })
+            })
+        });
+
+        const myModalEl = document.getElementById('image_delete_modal');
+        myModalEl.addEventListener('show.bs.modal', event => {
+            let item = event.relatedTarget;
+
+            fetch(item.href)
+            .then(response => response.json())
+            .then(function(data) {
+                myModalEl.querySelector('#strong_name').textContent = data.name;
+                myModalEl.querySelector('#btn_delete').href = data.delete_url;
+            });
+        });
+
+        chk_all_images.addEventListener('change', function(event) {
+            document.querySelectorAll('.chk-image').forEach(element => {
+                element.checked = this.checked;
+            });
+            checkInputs();
+        });
+
+        document.querySelectorAll('input.chk-image').forEach(element => {
+            element.addEventListener('change', function(event){
+                checkInputs();
+            });
+        });
+
+        function getImagesSelected() {
+            let ids = [];
+            let images = document.querySelectorAll('input.chk-image[type="checkbox"]:checked');
+
+            for (let i = 0; i < images.length; i++) {
+                const imageId = images[i].getAttribute('image-id');
+                ids.push(imageId);
+            }
+
+            return ids;
+        }
+
+        btnDelete.addEventListener('click', function(event) {
+            event.preventDefault();
+            
+            let ids = getImagesSelected();
+
+            fetch(this.href, {
+                method: 'POST',
+                body: JSON.stringify({
+                    'ids': ids
+                })
+            })
+            .then(response => response.json())
+            .then(function(data){
+                for (let i = 0; i < data.ids.length; i++) {
+                    const imageId = data.ids[i];
+                    document.getElementById("tr_image_" + imageId).remove();
+                }
+                setDefaultImage();
+            });
+        });
+
+        btnDownload.addEventListener('click', function(event) {
+            event.preventDefault();
+
+            console.log('DESCARGAR');
+
+            let ids = getImagesSelected();
+
+            console.log(ids);
+
+            window.location.href = this.href + '?ids=' + ids;
+
+        });
+
+        setDefaultImage();
+    </script>
+{% endblock %}
