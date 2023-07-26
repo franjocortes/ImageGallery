@@ -1,0 +1,33 @@
+<tr class="row-image" image-id="{{ image.pk }}" id="tr_image_{{ image.pk }}">
+    <td>
+        <div class="form-check">
+            <input type="checkbox" class="form-check-input chk-image" image-id="{{ image.pk }}">
+        </div>
+    </td>
+    <td>
+        <input type="hidden" value="{{ image.url }}" id="image_preview_{{ image.pk }}">
+        <div id="image_name_{{ image.pk }}">
+            {{ image.title }}
+        </div>
+        <form action="{% url 'images:update' image.pk %}" method="post" class="image-form" image-id="{{ image.pk }}">
+            {% csrf_token %}
+            <input type="hidden" value="{{ image.title }}" class="form-control" id="image_input_name_{{ image.pk }}" name="name">
+        </form>
+    </td>
+    <td>{{ image.created_at }}</td>
+    <td>{{ image.size }}</td>
+    <td>
+        <div class="dropdown">
+            <button type="button" class="btn btn-outline-secondary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                ...
+            </button>
+            <div class="dropdown-menu">
+                <a href="{{ image.url }}" target="_blank" class="dropdown-item">Preview</a>
+                <a href="" class="dropdown-item image-edit" image-id="{{ image.pk }}">Edit name</a>
+                <a href="{% url 'images:download' image.pk %}" class="dropdown-item">Download</a>
+                <div class="dropdown-divider"></div>
+                <a href="{% url 'images:show' image.pk %}" class="dropdown-item" data-bs-toggle="modal" data-bs-target="#image_delete_modal">Delete</a>
+            </div>
+        </div>
+    </td>
+</tr>

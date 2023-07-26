@@ -8,6 +8,7 @@ from pathlib import Path
 from django.shortcuts import redirect, get_object_or_404
 from django.http import JsonResponse, HttpResponse
 from django.urls import reverse
+from django.template.loader import get_template
 from django.views.decorators.csrf import csrf_exempt
 
 from aws import upload_image, get_file_content, download_file
@@ -16,6 +17,23 @@ from albums.models import Album
 
 from images.forms import UploadFileForm
 from images.models import Image
+
+
+@csrf_exempt
+def search(request):
+    if request.method == 'GET' and request.GET.get('q'):
+
+        template = get_template('images/snippets/image.html')
+
+        images = [
+            template.render({'image': image})
+            for image in Image.objects.filter(name__startswith=request.GET.get('q'))
+        ]
+
+        return JsonResponse({
+            'success': True,
+            'images': images
+        })
 
 
 def show(request, pk):
