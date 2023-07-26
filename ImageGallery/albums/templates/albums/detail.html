@@ -25,6 +25,14 @@
         </div>
     </div>
 
+    <div class="row mt-2">
+        <div class="col">
+            <form action="{% url 'images:search' %}" id="searchImage">
+                <input type="text" class="form-control" name="q" placeholder="Search..." />
+            </form>
+        </div>
+    </div>
+
     <hr>
 
     <div class="row mt-4">
@@ -67,41 +75,9 @@
                         <th></th>
                     </tr>
                 </thead>
-                <tbody>
+                <tbody id="tableImages">
                     {% for image in images %}
-                        <tr class="row-image" image-id="{{ image.pk }}" id="tr_image_{{ image.pk }}">
-                            <td>
-                                <div class="form-check">
-                                    <input type="checkbox" class="form-check-input chk-image" image-id="{{ image.pk }}">
-                                </div>
-                            </td>
-                            <td>
-                                <input type="hidden" value="{{ image.url }}" id="image_preview_{{ image.pk }}">
-                                <div id="image_name_{{ image.pk }}">
-                                    {{ image.title }}
-                                </div>
-                                <form action="{% url 'images:update' image.pk %}" method="post" class="image-form" image-id="{{ image.pk }}">
-                                    {% csrf_token %}
-                                    <input type="hidden" value="{{ image.title }}" class="form-control" id="image_input_name_{{ image.pk }}" name="name">
-                                </form>
-                            </td>
-                            <td>{{ image.created_at }}</td>
-                            <td>{{ image.size }}</td>
-                            <td>
-                                <div class="dropdown">
-                                    <button type="button" class="btn btn-outline-secondary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
-                                        ...
-                                    </button>
-                                    <div class="dropdown-menu">
-                                        <a href="{{ image.url }}" target="_blank" class="dropdown-item">Preview</a>
-                                        <a href="" class="dropdown-item image-edit" image-id="{{ image.pk }}">Edit name</a>
-                                        <a href="{% url 'images:download' image.pk %}" class="dropdown-item">Download</a>
-                                        <div class="dropdown-divider"></div>
-                                        <a href="{% url 'images:show' image.pk %}" class="dropdown-item" data-bs-toggle="modal" data-bs-target="#image_delete_modal">Delete</a>
-                                    </div>
-                                </div>
-                            </td>
-                        </tr>
+                       {% include 'images/snippets/image.html' %}
                     {% endfor %}
                 </tbody>
             </table>
@@ -120,6 +96,8 @@
         const chk_all_images = document.getElementById('chk_all_images');
         const btnDownload = document.getElementById('btnDownload');
         const btnDelete = document.getElementById('btnDelete');
+        const searchImage = document.getElementById('searchImage');
+        const myModalEl = document.getElementById('image_delete_modal');
 
         function checkInputs(){
             let images = document.querySelectorAll('input.chk-image[type="checkbox"]:checked');
@@ -152,47 +130,67 @@
             }
         }
 
-        document.querySelectorAll('.row-image').forEach(element => {
-            element.addEventListener('click', function(event) {
-                selectRow(this);
+        function getImagesSelected() {
+            let ids = [];
+            let images = document.querySelectorAll('input.chk-image[type="checkbox"]:checked');
+
+            for (let i = 0; i < images.length; i++) {
+                const imageId = images[i].getAttribute('image-id');
+                ids.push(imageId);
+            }
+
+            return ids;
+        }
+
+        function registerEvents() {
+            document.querySelectorAll('.row-image').forEach(element => {
+                element.addEventListener('click', function(event) {
+                    selectRow(this);
+                });
             });
-        });
 
-        document.querySelectorAll('.image-edit').forEach(element => {
-            element.addEventListener('click', function(event) {
-                event.preventDefault();
-                const imageId = this.getAttribute('image-id');
-                const input = document.getElementById('image_input_name_' + imageId);
-                const div = document.getElementById('image_name_' + imageId);
-                input.setAttribute('type', 'text');
-                div.style.display = 'none';
-            });
-        });
-
-        document.querySelectorAll('.image-form').forEach(element => {
-            element.addEventListener('submit', function(event) {
-                event.preventDefault();
-
-                fetch(this.action, {
-                    body: new FormData(this),
-                    method: 'POST'
-                })
-                .then(response => response.json())
-                .then(data => {
+            document.querySelectorAll('.image-edit').forEach(element => {
+                element.addEventListener('click', function(event) {
+                    event.preventDefault();
                     const imageId = this.getAttribute('image-id');
                     const input = document.getElementById('image_input_name_' + imageId);
                     const div = document.getElementById('image_name_' + imageId);
-                    const inputPreview = document.getElementById('image_preview_' + imageId);
-                    input.value = data.name;
-                    input.setAttribute('type', 'hidden');
-                    div.innerHTML = data.name;
-                    div.style.display = 'block';
-                    inputPreview.value = data.url;
-                })
-            })
-        });
+                    input.setAttribute('type', 'text');
+                    div.style.display = 'none';
+                });
+            });
 
-        const myModalEl = document.getElementById('image_delete_modal');
+            document.querySelectorAll('.image-form').forEach(element => {
+                element.addEventListener('submit', function(event) {
+                    event.preventDefault();
+
+                    fetch(this.action, {
+                        body: new FormData(this),
+                        method: 'POST'
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        const imageId = this.getAttribute('image-id');
+                        const input = document.getElementById('image_input_name_' + imageId);
+                        const div = document.getElementById('image_name_' + imageId);
+                        const inputPreview = document.getElementById('image_preview_' + imageId);
+                        input.value = data.name;
+                        input.setAttribute('type', 'hidden');
+                        div.innerHTML = data.name;
+                        div.style.display = 'block';
+                        inputPreview.value = data.url;
+                    })
+                })
+            });
+
+            document.querySelectorAll('input.chk-image').forEach(element => {
+                element.addEventListener('change', function(event){
+                    checkInputs();
+                });
+            });
+        }
+
+
         myModalEl.addEventListener('show.bs.modal', event => {
             let item = event.relatedTarget;
 
@@ -210,24 +208,6 @@
             });
             checkInputs();
         });
-
-        document.querySelectorAll('input.chk-image').forEach(element => {
-            element.addEventListener('change', function(event){
-                checkInputs();
-            });
-        });
-
-        function getImagesSelected() {
-            let ids = [];
-            let images = document.querySelectorAll('input.chk-image[type="checkbox"]:checked');
-
-            for (let i = 0; i < images.length; i++) {
-                const imageId = images[i].getAttribute('image-id');
-                ids.push(imageId);
-            }
-
-            return ids;
-        }
 
         btnDelete.addEventListener('click', function(event) {
             event.preventDefault();
@@ -263,6 +243,21 @@
 
         });
 
+        searchImage.addEventListener('submit', function(event) {
+            event.preventDefault();
+            
+            fetch(this.action + '?q=' + this.q.value)
+            .then(response => response.json())
+            .then(data => {
+                let table = document.getElementById('tableImages');
+                table.innerHTML = data.images.toString().replaceAll(',', '');
+
+                registerEvents();
+                setDefaultImage();
+            });
+        });
+
+        registerEvents();
         setDefaultImage();
     </script>
 {% endblock %}
