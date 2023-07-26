@@ -36,12 +36,12 @@
                 data-bs-target="#image-modal">
                 New Image
             </button>
-            <button
-                type="button"
+            <a
+                href="{% url 'images:download_many' %}"
                 id="btnDownload"
                 class="btn btn-outline-info disabled">
                 Download
-            </button>
+            </a>
             <a
                 href="{% url 'images:delete_many' %}"
                 id="btnDelete"
@@ -217,8 +217,7 @@
             });
         });
 
-        btnDelete.addEventListener('click', function(event) {
-            event.preventDefault();
+        function getImagesSelected() {
             let ids = [];
             let images = document.querySelectorAll('input.chk-image[type="checkbox"]:checked');
 
@@ -226,6 +225,14 @@
                 const imageId = images[i].getAttribute('image-id');
                 ids.push(imageId);
             }
+
+            return ids;
+        }
+
+        btnDelete.addEventListener('click', function(event) {
+            event.preventDefault();
+            
+            let ids = getImagesSelected();
 
             fetch(this.href, {
                 method: 'POST',
@@ -241,6 +248,19 @@
                 }
                 setDefaultImage();
             });
+        });
+
+        btnDownload.addEventListener('click', function(event) {
+            event.preventDefault();
+
+            console.log('DESCARGAR');
+
+            let ids = getImagesSelected();
+
+            console.log(ids);
+
+            window.location.href = this.href + '?ids=' + ids;
+
         });
 
         setDefaultImage();

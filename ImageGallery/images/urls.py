@@ -1,6 +1,6 @@
 from django.urls import path
 
-from images.views import create, update, show, delete, download, delete_many
+from images.views import create, update, show, delete, download, delete_many, download_many
 
 
 app_name = 'images'
@@ -12,4 +12,5 @@ urlpatterns = [
     path('delete/<int:pk>/', delete, name='delete'),
     path('delete/many/', delete_many, name='delete_many'),
     path('download/<int:pk>/', download, name='download'),
+    path('download/many/', download_many, name='download_many'),
 ]
