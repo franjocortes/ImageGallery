@@ -120,3 +120,15 @@ def get_file_content(mediafile_key: str) -> any:
     except Exception as error:
         print(error)
     return None
+
+
+@has_credentials
+def download_file(mediafile_key: str, local_path: str) -> any:
+    try:
+        s3 = get_boto_client()
+        file_key = AWS_ROOT_KEY + mediafile_key
+        with open(local_path, 'wb') as file:
+            s3.download_fileobj(AWS_S3_BUCKET_NAME, file_key, file)
+    except Exception as error:
+        print(error)
+    return None

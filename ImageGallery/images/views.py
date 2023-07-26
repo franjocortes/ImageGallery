@@ -1,8 +1,16 @@
+import json
+import shutil
+
+from wsgiref.util import FileWrapper
+
+from pathlib import Path
+
 from django.shortcuts import redirect, get_object_or_404
 from django.http import JsonResponse, HttpResponse
 from django.urls import reverse
+from django.views.decorators.csrf import csrf_exempt
 
-from aws import upload_image, delete_file, get_file_content
+from aws import upload_image, get_file_content, download_file
 
 from albums.models import Album
 
@@ -72,10 +80,20 @@ def delete(request, pk):
     image = get_object_or_404(Image, pk=pk)
     album = image.album
 
-    if delete_file(image.key):
-        image.delete()
+    image.objects.delete_by_aws(image.pk)
 
     return redirect('albums:detail', album.id)
+
+
+@csrf_exempt
+def delete_many(request):
+    if request.method == 'POST':
+        payload = json.loads(request.body)
+        ids = payload.get('ids', [])
+
+        return JsonResponse({
+            'ids': [ Image.objects.delete_by_aws(id) for id in ids ]
+        })
 
 
 def download(request, pk):
@@ -88,3 +106,24 @@ def download(request, pk):
     print('ERROR: an error with aws s3')
     return redirect('albums:detail', image.album.id)
 
+
+def download_many(request):
+
+    dir_path = 'tmp/images/'
+    Path(dir_path).mkdir(parents=True, exist_ok=True)  # Crea la carpeta si no existe
+
+    for id in request.GET.get('ids', '').split(','):
+        image = Image.objects.filter(pk=int(id)).first()
+        if image:
+            local_path = dir_path + image.name
+            download_file(image.key, local_path)
+
+    shutil.make_archive('tmp/images', 'zip', dir_path)
+
+    # Eliminar la carpeta images?
+
+    wrapper = FileWrapper(open('tmp/images.zip', 'rb'))
+
+    response = HttpResponse(wrapper, content_type='application/zip')
+    response['Content-Disposition'] = 'attachment; filename="images.zip"'
+    return response

@@ -36,6 +36,18 @@
                 data-bs-target="#image-modal">
                 New Image
             </button>
+            <a
+                href="{% url 'images:download_many' %}"
+                id="btnDownload"
+                class="btn btn-outline-info disabled">
+                Download
+            </a>
+            <a
+                href="{% url 'images:delete_many' %}"
+                id="btnDelete"
+                class="btn btn-outline-danger disabled">
+                Delete
+            </a>
         </div>
     </div>
 
@@ -44,6 +56,11 @@
             <table class="table">
                 <thead>
                     <tr>
+                        <th>
+                            <div class="form-check">
+                                <input type="checkbox" class="form-check-input" id="chk_all_images">
+                            </div>
+                        </th>
                         <th>Name</th>
                         <th>Create date</th>
                         <th>Size</th>
@@ -52,7 +69,12 @@
                 </thead>
                 <tbody>
                     {% for image in images %}
-                        <tr class="row-image" image-id="{{ image.pk }}">
+                        <tr class="row-image" image-id="{{ image.pk }}" id="tr_image_{{ image.pk }}">
+                            <td>
+                                <div class="form-check">
+                                    <input type="checkbox" class="form-check-input chk-image" image-id="{{ image.pk }}">
+                                </div>
+                            </td>
                             <td>
                                 <input type="hidden" value="{{ image.url }}" id="image_preview_{{ image.pk }}">
                                 <div id="image_name_{{ image.pk }}">
@@ -95,6 +117,20 @@
     <script>
         const imagepreview = document.getElementById("image_preview");
         const imageDefaultUrl = "https://{{ aws.bucket_name }}.s3.amazonaws.com/{{ aws.root_key }}default.png";
+        const chk_all_images = document.getElementById('chk_all_images');
+        const btnDownload = document.getElementById('btnDownload');
+        const btnDelete = document.getElementById('btnDelete');
+
+        function checkInputs(){
+            let images = document.querySelectorAll('input.chk-image[type="checkbox"]:checked');
+            if (images.length > 1){
+                btnDownload.classList.remove('disabled');
+                btnDelete.classList.remove('disabled');
+            } else {
+                btnDownload.classList.add('disabled');
+                btnDelete.classList.add('disabled');
+            }
+        }
 
         function selectRow(row) {
             let imageId = row.getAttribute('image-id');
@@ -166,6 +202,65 @@
                 myModalEl.querySelector('#strong_name').textContent = data.name;
                 myModalEl.querySelector('#btn_delete').href = data.delete_url;
             });
+        });
+
+        chk_all_images.addEventListener('change', function(event) {
+            document.querySelectorAll('.chk-image').forEach(element => {
+                element.checked = this.checked;
+            });
+            checkInputs();
+        });
+
+        document.querySelectorAll('input.chk-image').forEach(element => {
+            element.addEventListener('change', function(event){
+                checkInputs();
+            });
+        });
+
+        function getImagesSelected() {
+            let ids = [];
+            let images = document.querySelectorAll('input.chk-image[type="checkbox"]:checked');
+
+            for (let i = 0; i < images.length; i++) {
+                const imageId = images[i].getAttribute('image-id');
+                ids.push(imageId);
+            }
+
+            return ids;
+        }
+
+        btnDelete.addEventListener('click', function(event) {
+            event.preventDefault();
+            
+            let ids = getImagesSelected();
+
+            fetch(this.href, {
+                method: 'POST',
+                body: JSON.stringify({
+                    'ids': ids
+                })
+            })
+            .then(response => response.json())
+            .then(function(data){
+                for (let i = 0; i < data.ids.length; i++) {
+                    const imageId = data.ids[i];
+                    document.getElementById("tr_image_" + imageId).remove();
+                }
+                setDefaultImage();
+            });
+        });
+
+        btnDownload.addEventListener('click', function(event) {
+            event.preventDefault();
+
+            console.log('DESCARGAR');
+
+            let ids = getImagesSelected();
+
+            console.log(ids);
+
+            window.location.href = this.href + '?ids=' + ids;
+
         });
 
         setDefaultImage();
